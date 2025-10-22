@@ -201,37 +201,61 @@ if clf is None or vec is None:
 colL, colR = st.columns([3, 2])
 
 # 預設範例
-EXAMPLES = {
-    "🎁 Spam: Prize Winner": "Congratulations! You've won a FREE ticket to Bahamas. Reply WIN to claim now!",
-    "🚨 Spam: Urgent Account": "URGENT! Your bank account has been suspended. Click here to verify immediately.",
-    "💰 Spam: Money Offer": "You have been selected for a $5000 loan. No credit check required. Call now!",
-    "📅 Ham: Meeting": "Can we reschedule our meeting to tomorrow at 3pm?",
-    "🍕 Ham: Lunch Plan": "Lunch at 12? I'm thinking pizza.",
-    "👋 Ham: Greeting": "Hey! How was your weekend? Let's catch up soon.",
-}
+HAM_EXAMPLES = [
+    "Can we reschedule our meeting to tomorrow at 3pm?",
+    "Lunch at 12? I'm thinking pizza.",
+    "Hey! How was your weekend? Let's catch up soon.",
+    "Thanks for your help yesterday. Really appreciate it!",
+    "Don't forget to bring the documents for tomorrow's presentation.",
+    "Are you free for coffee this afternoon?",
+]
+
+SPAM_EXAMPLES = [
+    "Congratulations! You've won a FREE ticket to Bahamas. Reply WIN to claim now!",
+    "URGENT! Your bank account has been suspended. Click here to verify immediately.",
+    "You have been selected for a $5000 loan. No credit check required. Call now!",
+    "FREE iPhone 15! You are the lucky winner. Click this link to claim your prize.",
+    "Your package delivery failed. Pay $2.99 fee to reschedule: http://fake-link.com",
+    "WINNER! You won $1,000,000 in our lottery. Send your details to claim.",
+]
 
 with colL:
     st.subheader("🔍 Try it out")
     
-    # 範例按鈕區
+    # 範例按鈕區 - 改為 3 個大按鈕
     st.markdown("**Quick Examples:**")
-    cols = st.columns(3)
-    example_keys = list(EXAMPLES.keys())
+    col_ham, col_spam, col_random = st.columns(3)
     
-    for idx, key in enumerate(example_keys):
-        col_idx = idx % 3
-        with cols[col_idx]:
-            if st.button(key, key=f"btn_{idx}", use_container_width=True):
-                st.session_state["input_text"] = EXAMPLES[key]
+    with col_ham:
+        if st.button("✅ Generate HAM", use_container_width=True, type="secondary"):
+            import random
+            st.session_state["input_text"] = random.choice(HAM_EXAMPLES)
+    
+    with col_spam:
+        if st.button("🚫 Generate SPAM", use_container_width=True, type="secondary"):
+            import random
+            st.session_state["input_text"] = random.choice(SPAM_EXAMPLES)
+    
+    with col_random:
+        if st.button("🎲 Random", use_container_width=True, type="secondary"):
+            import random
+            all_examples = HAM_EXAMPLES + SPAM_EXAMPLES
+            st.session_state["input_text"] = random.choice(all_examples)
     
     st.markdown("---")
     
     # 文字輸入區
-    default_text = st.session_state.get("input_text", EXAMPLES[example_keys[0]])
-    text = st.text_area("Enter an SMS message:", value=default_text, height=120, key="text_input")
+    default_text = st.session_state.get("input_text", HAM_EXAMPLES[0])
+    text = st.text_area(
+        "Enter an SMS message:", 
+        value=default_text, 
+        height=120, 
+        key="text_area_input",
+        help="Type your own message or use the buttons above to generate examples"
+    )
     
-    # 更新 session_state
-    if text != default_text:
+    # 同步更新 session_state（當使用者手動編輯時）
+    if text != st.session_state.get("input_text", ""):
         st.session_state["input_text"] = text
 
     col_btn1, col_btn2 = st.columns([1, 1])
