@@ -219,6 +219,10 @@ SPAM_EXAMPLES = [
     "WINNER! You won $1,000,000 in our lottery. Send your details to claim.",
 ]
 
+# Initialize session state
+if "input_text" not in st.session_state:
+    st.session_state["input_text"] = HAM_EXAMPLES[0]
+
 with colL:
     st.subheader("🔍 Try it out")
     
@@ -230,32 +234,33 @@ with colL:
         if st.button("✅ Generate HAM", use_container_width=True, type="secondary"):
             import random
             st.session_state["input_text"] = random.choice(HAM_EXAMPLES)
+            st.rerun()
     
     with col_spam:
         if st.button("🚫 Generate SPAM", use_container_width=True, type="secondary"):
             import random
             st.session_state["input_text"] = random.choice(SPAM_EXAMPLES)
+            st.rerun()
     
     with col_random:
         if st.button("🎲 Random", use_container_width=True, type="secondary"):
             import random
             all_examples = HAM_EXAMPLES + SPAM_EXAMPLES
             st.session_state["input_text"] = random.choice(all_examples)
+            st.rerun()
     
     st.markdown("---")
     
-    # 文字輸入區
-    default_text = st.session_state.get("input_text", HAM_EXAMPLES[0])
+    # 文字輸入區 - 直接使用 session_state 作為 value
     text = st.text_area(
         "Enter an SMS message:", 
-        value=default_text, 
-        height=120, 
-        key="text_area_input",
+        value=st.session_state["input_text"], 
+        height=120,
         help="Type your own message or use the buttons above to generate examples"
     )
     
-    # 同步更新 session_state（當使用者手動編輯時）
-    if text != st.session_state.get("input_text", ""):
+    # 當使用者手動編輯時，更新 session_state
+    if text != st.session_state["input_text"]:
         st.session_state["input_text"] = text
 
     col_btn1, col_btn2 = st.columns([1, 1])
