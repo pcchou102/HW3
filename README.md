@@ -2,6 +2,8 @@
 
 > **專案目標**：建立可重現的 SMS 垃圾簡訊分類模型基線，並提供互動式 Streamlit Web 介面展示分類結果與指標。
 
+**🚀 立即體驗 → [Streamlit Demo](https://hzx82zfwwyazqv45fvqxqs.streamlit.app/)**
+
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -212,7 +214,3 @@ openspec validate spam-email-classification
 - [Fission AI](https://github.com/Fission-AI) 的 OpenSpec 框架
 - [PacktPublishing](https://github.com/PacktPublishing) 提供公開資料集
 - Streamlit 社群提供優質的 Web 框架
-
----
-
-**🚀 立即體驗 → [Streamlit Demo](https://hzx82zfwwyazqv45fvqxqs.streamlit.app/)**
