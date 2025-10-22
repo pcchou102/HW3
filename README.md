@@ -215,4 +215,4 @@ openspec validate spam-email-classification
 
 ---
 
-**🚀 立即體驗 → [Streamlit Demo](https://share.streamlit.io)** (部署後更新連結)
+**🚀 立即體驗 → [Streamlit Demo]([https://share.streamlit.io](https://hzx82zfwwyazqv45fvqxqs.streamlit.app/))** (部署後更新連結)
