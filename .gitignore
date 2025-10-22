@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Environments
+.venv/
+.env/
+
+# Data & Artifacts
+artifacts/
+dataset/
+
+# Notebooks and caches
+.ipynb_checkpoints/
+
+# OS/files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# OpenSpec generated logs (if any)
+.openspec/
