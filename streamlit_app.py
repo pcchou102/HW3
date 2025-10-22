@@ -1,11 +1,16 @@
 import json
-import os
-import subprocess
 from pathlib import Path
 
 import joblib
 import numpy as np
+import pandas as pd
 import streamlit as st
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
+from sklearn.model_selection import train_test_split
+from sklearn.svm import LinearSVC
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 ART_DIR = Path("artifacts")
 MODEL_PATH = ART_DIR / "model.joblib"
@@ -18,22 +23,87 @@ DATASET_PATH = Path("dataset/sms_spam_no_header.csv")
 def ensure_artifacts():
     if MODEL_PATH.exists() and VEC_PATH.exists():
         return
-    st.info("Artifacts not found. Downloading dataset and training model (one-time setup)...")
     
-    # Download dataset
-    if not DATASET_PATH.exists():
-        DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
-        import urllib.request
-        url = "https://raw.githubusercontent.com/PacktPublishing/Hands-On-Artificial-Intelligence-for-Cybersecurity/master/Chapter03/datasets/sms_spam_no_header.csv"
-        urllib.request.urlretrieve(url, str(DATASET_PATH))
-    
-    # Train model
-    subprocess.run(
-        ["python", "train.py", "--data", str(DATASET_PATH), "--out", str(ART_DIR), "--seed", "42"],
-        check=True
-    )
-    st.success("Training complete!")
-    st.rerun()
+    with st.spinner("🚀 First-time setup: Downloading dataset and training model (this may take 1-2 minutes)..."):
+        try:
+            # Download dataset
+            if not DATASET_PATH.exists():
+                DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
+                import urllib.request
+                url = "https://raw.githubusercontent.com/PacktPublishing/Hands-On-Artificial-Intelligence-for-Cybersecurity/master/Chapter03/datasets/sms_spam_no_header.csv"
+                urllib.request.urlretrieve(url, str(DATASET_PATH))
+                st.success("✅ Dataset downloaded")
+            
+            # Train inline (avoid subprocess issues)
+            ART_DIR.mkdir(parents=True, exist_ok=True)
+            
+            # Load data
+            df = pd.read_csv(DATASET_PATH, header=None, names=["label", "text"], encoding="utf-8")
+            df = df.dropna(subset=["label", "text"])
+            df["text"] = df["text"].astype(str).str.strip()
+            df = df[df["text"].str.len() > 0]
+            
+            # Map labels
+            label_map = {"ham": 0, "spam": 1}
+            y = df["label"].str.strip().str.lower().map(label_map).values
+            X_text = df["text"].values
+            
+            # Split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_text, y, test_size=0.2, random_state=42, stratify=y
+            )
+            
+            # Vectorize
+            vectorizer = TfidfVectorizer(
+                lowercase=True, analyzer="word", ngram_range=(1, 2),
+                max_features=50000, min_df=2, stop_words="english"
+            )
+            X_train_vec = vectorizer.fit_transform(X_train)
+            X_test_vec = vectorizer.transform(X_test)
+            
+            # Train
+            clf = LinearSVC(random_state=42)
+            clf.fit(X_train_vec, y_train)
+            
+            # Evaluate
+            y_pred = clf.predict(X_test_vec)
+            acc = accuracy_score(y_test, y_pred)
+            precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="weighted", zero_division=0)
+            cm = confusion_matrix(y_test, y_pred)
+            
+            # Save artifacts
+            metrics = {
+                "accuracy": acc,
+                "precision_weighted": precision,
+                "recall_weighted": recall,
+                "f1_weighted": f1,
+                "seed": 42,
+                "test_size": 0.2,
+            }
+            with open(METRICS_PATH, "w", encoding="utf-8") as f:
+                json.dump(metrics, f, indent=2)
+            
+            # Save confusion matrix plot
+            fig, ax = plt.subplots(figsize=(4, 3))
+            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
+                        xticklabels=["ham", "spam"], yticklabels=["ham", "spam"], ax=ax)
+            ax.set_xlabel("Predicted")
+            ax.set_ylabel("True")
+            plt.tight_layout()
+            plt.savefig(CM_IMG_PATH)
+            plt.close()
+            
+            # Save model & vectorizer
+            joblib.dump(clf, MODEL_PATH)
+            joblib.dump(vectorizer, VEC_PATH)
+            
+            st.success(f"✅ Training complete! Accuracy: {acc:.4f}")
+            st.balloons()
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"❌ Training failed: {e}")
+            st.stop()
 
 ensure_artifacts()
 
