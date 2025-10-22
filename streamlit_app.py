@@ -1,4 +1,6 @@
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import joblib
@@ -10,6 +12,30 @@ MODEL_PATH = ART_DIR / "model.joblib"
 VEC_PATH = ART_DIR / "vectorizer.joblib"
 METRICS_PATH = ART_DIR / "metrics.json"
 CM_IMG_PATH = ART_DIR / "confusion_matrix.png"
+DATASET_PATH = Path("dataset/sms_spam_no_header.csv")
+
+# Auto-train on Streamlit Cloud if artifacts missing
+def ensure_artifacts():
+    if MODEL_PATH.exists() and VEC_PATH.exists():
+        return
+    st.info("Artifacts not found. Downloading dataset and training model (one-time setup)...")
+    
+    # Download dataset
+    if not DATASET_PATH.exists():
+        DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
+        import urllib.request
+        url = "https://raw.githubusercontent.com/PacktPublishing/Hands-On-Artificial-Intelligence-for-Cybersecurity/master/Chapter03/datasets/sms_spam_no_header.csv"
+        urllib.request.urlretrieve(url, str(DATASET_PATH))
+    
+    # Train model
+    subprocess.run(
+        ["python", "train.py", "--data", str(DATASET_PATH), "--out", str(ART_DIR), "--seed", "42"],
+        check=True
+    )
+    st.success("Training complete!")
+    st.rerun()
+
+ensure_artifacts()
 
 st.set_page_config(page_title="SMS Spam Classifier", page_icon="📬", layout="wide")
 st.title("📬 SMS Spam Classifier (Baseline: LinearSVC + TF‑IDF)")
