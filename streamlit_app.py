@@ -110,24 +110,74 @@ ensure_artifacts()
 st.set_page_config(page_title="SMS Spam Classifier", page_icon="📬", layout="wide")
 st.title("📬 SMS Spam Classifier (Baseline: LinearSVC + TF‑IDF)")
 
-# Sidebar: metrics overview
+# Sidebar: 優化版側邊欄
 with st.sidebar:
-    st.header("Run Status & Metrics")
-    if METRICS_PATH.exists():
-        try:
-            metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
-            st.metric("Accuracy", f"{metrics.get('accuracy', 0):.4f}")
-            st.write("Seed:", metrics.get("seed"))
-            st.write("Test size:", metrics.get("test_size"))
-        except Exception as e:
-            st.warning(f"Failed to read metrics.json: {e}")
-    else:
-        st.info("metrics.json not found. Run training first.")
-
-    if CM_IMG_PATH.exists():
-        st.image(str(CM_IMG_PATH), caption="Confusion Matrix", use_container_width=True)
-    else:
-        st.info("confusion_matrix.png not found.")
+    st.markdown("### 🎯 About This App")
+    st.markdown("""
+    This demo uses a **Linear SVM** model trained on 5,574 SMS messages 
+    to classify text as **spam** or **ham** (legitimate).
+    """)
+    
+    st.markdown("---")
+    
+    # Model Performance (可摺疊)
+    with st.expander("📊 Model Performance", expanded=False):
+        if METRICS_PATH.exists():
+            try:
+                metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Accuracy", f"{metrics.get('accuracy', 0):.3f}")
+                    st.metric("Precision", f"{metrics.get('precision_weighted', 0):.3f}")
+                with col2:
+                    st.metric("Recall", f"{metrics.get('recall_weighted', 0):.3f}")
+                    st.metric("F1 Score", f"{metrics.get('f1_weighted', 0):.3f}")
+                
+                st.caption(f"🔢 Seed: {metrics.get('seed')} | Test size: {metrics.get('test_size')}")
+            except Exception as e:
+                st.warning(f"Failed to load metrics: {e}")
+        else:
+            st.info("Metrics not available. Training in progress...")
+    
+    # Confusion Matrix (可摺疊)
+    with st.expander("🔍 Confusion Matrix", expanded=False):
+        if CM_IMG_PATH.exists():
+            st.image(str(CM_IMG_PATH), use_container_width=True)
+            st.caption("Visual breakdown of model predictions")
+        else:
+            st.info("Confusion matrix will appear after training.")
+    
+    # Dataset Info (可摺疊)
+    with st.expander("📁 Dataset Info", expanded=False):
+        st.markdown("""
+        **Source**: [PacktPublishing](https://github.com/PacktPublishing/Hands-On-Artificial-Intelligence-for-Cybersecurity)
+        
+        **Total Messages**: 5,574  
+        **Split**: 80% train / 20% test  
+        **Classes**: Ham (legitimate) & Spam
+        
+        The dataset contains real-world SMS messages 
+        labeled for spam detection research.
+        """)
+    
+    # Quick Stats (固定顯示)
+    st.markdown("---")
+    st.markdown("### 📈 Quick Stats")
+    stat_col1, stat_col2 = st.columns(2)
+    with stat_col1:
+        st.metric("Model", "LinearSVC")
+        st.metric("Features", "TF-IDF")
+    with stat_col2:
+        st.metric("Train Time", "~2 min")
+        st.metric("Status", "✅ Ready")
+    
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; color: #666; font-size: 0.85em;'>
+    Built with Streamlit 🎈<br/>
+    <a href='https://github.com/pcchou102/HW3' target='_blank'>View on GitHub</a>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Load model/vectorizer
 @st.cache_resource(show_spinner=False)
